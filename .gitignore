@@ -1,0 +1,28 @@
+# Ambiente e segredos
+.env
+
+# Banco de dados
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Ambientes virtuais
+venv/
+.venv/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
