@@ -1,0 +1,7 @@
+pipelines:
+  branches:
+    master:
+      - step:
+          name: Deploy
+          script:
+            - ssh $SERVER_USER@$SERVER_HOST "cd $SERVER_PATH && git pull && docker compose up -d --build"
