@@ -858,3 +858,17 @@ textarea::placeholder {
 #profile-panel.open {
     display: flex;
 }
+
+#detail-panel {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 24, 20, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+}
+
+#detail-panel.open {
+    display: flex;
+}

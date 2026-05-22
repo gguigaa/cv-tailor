@@ -9,7 +9,7 @@ from app.core.config import get_settings
 from app.core.security import hash_password
 from app.models.user import User  # noqa: F401 — needed for Base.metadata
 from app.models.cv import CVProfile, GeneratedCV  # noqa: F401
-from app.routers import auth, users, profile, cv
+from app.routers import auth, users, profile, cv, admin
 
 settings = get_settings()
 
@@ -39,7 +39,6 @@ def seed_admin():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    Base.metadata.create_all(bind=engine)
     seed_admin()
     yield
 
@@ -51,6 +50,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(profile.router)
 app.include_router(cv.router)
+app.include_router(admin.router)
 
 # Serve frontend static files
 STATIC_DIR = "/app/frontend"

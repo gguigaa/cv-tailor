@@ -96,6 +96,8 @@ async def generate_cv(
         job_description=body.job_description,
         result=result,
         lang=body.lang,
+        prompt_used=prompt,
+        cv_snapshot=profile.cv_pt if body.lang == "pt" else profile.cv_en,
     )
     db.add(record)
     db.commit()

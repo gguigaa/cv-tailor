@@ -25,6 +25,8 @@ class GeneratedCV(Base):
     job_description = Column(Text, nullable=False)
     result = Column(Text, nullable=False)
     lang = Column(String(2), default="pt")
+    prompt_used = Column(Text, nullable=True)
+    cv_snapshot = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="generated_cvs")

@@ -1,162 +1,210 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CV Tailor</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap"
+    rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <link rel="stylesheet" href="/static/styles.css"/>
+  <link rel="stylesheet" href="/static/styles.css" />
 </head>
+
 <body>
 
-<!-- LOGIN -->
-<div id="login-screen">
-  <div class="login-card">
-    <div>
-      <div class="login-logo">CV <span>Tailor</span></div>
-      <div class="login-sub">Entre para continuar</div>
+  <!-- LOGIN -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div>
+        <div class="login-logo">CV <span>Tailor</span></div>
+        <div class="login-sub">Entre para continuar</div>
+      </div>
+      <div class="form-group">
+        <label>Usuário</label>
+        <input class="form-input" id="l-user" type="text" placeholder="seu usuário" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input class="form-input" id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <div class="login-error" id="login-error">Usuário ou senha incorretos.</div>
+      <button class="btn-full" id="login-btn" onclick="doLogin()">Entrar</button>
     </div>
-    <div class="form-group">
-      <label>Usuário</label>
-      <input class="form-input" id="l-user" type="text" placeholder="seu usuário" autocomplete="username"/>
-    </div>
-    <div class="form-group">
-      <label>Senha</label>
-      <input class="form-input" id="l-pass" type="password" placeholder="••••••••" autocomplete="current-password"/>
-    </div>
-    <div class="login-error" id="login-error">Usuário ou senha incorretos.</div>
-    <button class="btn-full" id="login-btn" onclick="doLogin()">Entrar</button>
   </div>
-</div>
 
-<!-- APP -->
-<div id="app-screen">
-  <header>
-    <div class="logo">
-      <span class="logo-t">CV Tailor</span>
-      <span class="logo-s">powered by Claude</span>
-    </div>
-    <div class="header-right">
-      <div class="lang-toggle">
-        <button class="lang-btn active" id="btn-pt" onclick="setLang('pt')">PT</button>
-        <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+  <!-- APP -->
+  <div id="app-screen">
+    <header>
+      <div class="logo">
+        <span class="logo-t">CV Tailor</span>
+        <span class="logo-s">powered by Claude</span>
       </div>
-      <div class="user-chip" onclick="openProfile()" style="cursor:pointer">
-        <div class="user-dot" id="user-initial">?</div>
-        <span id="user-name-label"></span>
-      </div>
-      <button class="btn-sm" id="admin-btn" onclick="openAdmin()" style="display:none">Admin</button>
-      <button class="btn-sm" onclick="doLogout()">Sair</button>
-    </div>
-  </header>
-
-  <div class="main">
-    <!-- LEFT -->
-    <div class="left-panel">
-      <div class="tab-bar">
-        <button class="tab active" onclick="switchTab('cv')">Master CV</button>
-        <button class="tab" onclick="switchTab('job')">Vaga</button>
-        <button class="tab" onclick="switchTab('prompt')">Prompt</button>
-        <button class="tab" onclick="switchTab('history')">Histórico</button>
-      </div>
-
-      <!-- CV TAB -->
-      <div class="tab-content active" id="tab-cv">
-        <div class="panel-inner">
-          <div>
-            <div class="field-label">Currículo mestre — <span id="cv-lang-label">Português</span></div>
-            <div class="field-hint">Edite e salve. O conteúdo é carregado automaticamente no login.</div>
-          </div>
-          <textarea id="cv-text" placeholder="# Nome Completo&#10;&#10;## Experiência&#10;..."></textarea>
-          <div class="save-row">
-            <div class="char-count" id="cv-count">0 caracteres</div>
-            <span class="save-status" id="cv-saved">✓ Salvo</span>
-            <button class="btn-sm" onclick="saveCV()">Salvar CV</button>
-          </div>
+      <div class="header-right">
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="btn-pt" onclick="setLang('pt')">PT</button>
+          <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
         </div>
-      </div>
-
-      <!-- JOB TAB -->
-      <div class="tab-content" id="tab-job">
-        <div class="panel-inner">
-          <div>
-            <div class="field-label">Descrição da vaga</div>
-            <div class="field-hint">Cole o texto completo — título, requisitos, responsabilidades e cultura.</div>
-          </div>
-          <textarea id="job-text" placeholder="Título: Arquiteto de Software Sênior&#10;Empresa: Acme Corp&#10;..."></textarea>
-          <div class="char-count" id="job-count">0 caracteres</div>
+        <div class="user-chip" onclick="openProfile()" style="cursor:pointer">
+          <div class="user-dot" id="user-initial">?</div>
+          <span id="user-name-label"></span>
         </div>
+        <button class="btn-sm" id="admin-btn" onclick="openAdmin()" style="display:none">Admin</button>
+        <button class="btn-sm" onclick="doLogout()">Sair</button>
       </div>
+    </header>
 
-      <!-- PROMPT TAB -->
-      <div class="tab-content" id="tab-prompt">
-        <div class="panel-inner">
-          <div>
-            <div class="field-label">Prompt base</div>
-            <div class="field-hint">Instrução enviada ao Claude. Clique nas variáveis para inserir.</div>
-            <div class="prompt-vars">
-              <span class="var-badge" onclick="insertVar('{CV}')">{CV}</span>
-              <span class="var-badge" onclick="insertVar('{VAGA}')">{VAGA}</span>
-              <span class="var-badge" onclick="insertVar('{IDIOMA}')">{IDIOMA}</span>
+    <div class="main">
+      <!-- LEFT -->
+      <div class="left-panel">
+        <div class="tab-bar">
+          <button class="tab active" onclick="switchTab('cv')">Master CV</button>
+          <button class="tab" onclick="switchTab('job')">Vaga</button>
+          <button class="tab" onclick="switchTab('prompt')">Prompt</button>
+          <button class="tab" onclick="switchTab('history')">Histórico</button>
+        </div>
+
+        <!-- CV TAB -->
+        <div class="tab-content active" id="tab-cv">
+          <div class="panel-inner">
+            <div>
+              <div class="field-label">Currículo mestre — <span id="cv-lang-label">Português</span></div>
+              <div class="field-hint">Edite e salve. O conteúdo é carregado automaticamente no login.</div>
+            </div>
+            <textarea id="cv-text" placeholder="# Nome Completo&#10;&#10;## Experiência&#10;..."></textarea>
+            <div class="save-row">
+              <div class="char-count" id="cv-count">0 caracteres</div>
+              <span class="save-status" id="cv-saved">✓ Salvo</span>
+              <button class="btn-sm" onclick="saveCV()">Salvar CV</button>
             </div>
           </div>
-          <textarea id="prompt-text" style="font-size:12px"></textarea>
-          <div class="save-row">
-            <div class="char-count" id="prompt-count">0 caracteres</div>
-            <span class="save-status" id="prompt-saved">✓ Salvo</span>
-            <button class="btn-sm" onclick="savePrompt()">Salvar prompt</button>
+        </div>
+
+        <!-- JOB TAB -->
+        <div class="tab-content" id="tab-job">
+          <div class="panel-inner">
+            <div>
+              <div class="field-label">Descrição da vaga</div>
+              <div class="field-hint">Cole o texto completo — título, requisitos, responsabilidades e cultura.</div>
+            </div>
+            <textarea id="job-text"
+              placeholder="Título: Arquiteto de Software Sênior&#10;Empresa: Acme Corp&#10;..."></textarea>
+            <div class="char-count" id="job-count">0 caracteres</div>
           </div>
         </div>
-      </div>
 
-      <!-- HISTORY TAB -->
-      <div class="tab-content" id="tab-history">
-        <div class="panel-inner" style="padding:0; gap:0; overflow-y:auto;">
-          <div class="history-list" id="history-list">
-            <div style="padding:24px; text-align:center; color:var(--ink-3); font-size:13px;">Carregando histórico...</div>
+        <!-- PROMPT TAB -->
+        <div class="tab-content" id="tab-prompt">
+          <div class="panel-inner">
+            <div>
+              <div class="field-label">Prompt base</div>
+              <div class="field-hint">Instrução enviada ao Claude. Clique nas variáveis para inserir.</div>
+              <div class="prompt-vars">
+                <span class="var-badge" onclick="insertVar('{CV}')">{CV}</span>
+                <span class="var-badge" onclick="insertVar('{VAGA}')">{VAGA}</span>
+                <span class="var-badge" onclick="insertVar('{IDIOMA}')">{IDIOMA}</span>
+              </div>
+            </div>
+            <textarea id="prompt-text" style="font-size:12px"></textarea>
+            <div class="save-row">
+              <div class="char-count" id="prompt-count">0 caracteres</div>
+              <span class="save-status" id="prompt-saved">✓ Salvo</span>
+              <button class="btn-sm" onclick="savePrompt()">Salvar prompt</button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div class="generate-bar">
-        <div class="gen-status" id="gen-status">Preencha o CV e a vaga para começar</div>
-        <button class="btn-accent" id="gen-btn" onclick="generate()" disabled>Gerar →</button>
-      </div>
-    </div>
+        <!-- HISTORY TAB -->
+        <div class="tab-content" id="tab-history">
+          <div class="panel-inner" style="padding:0; gap:0; overflow-y:auto;">
+            <div class="history-list" id="history-list">
+              <div style="padding:24px; text-align:center; color:var(--ink-3); font-size:13px;">Carregando histórico...
+              </div>
+            </div>
+          </div>
+        </div>
 
-    <!-- RIGHT -->
-    <div class="right-panel">
-      <div class="output-header">
-        <span class="output-title">Currículo gerado</span>
-        <div class="output-actions">
-          <button class="btn-sm" id="copy-btn" onclick="copyOutput()" style="display:none">Copiar</button>
-          <button class="btn-sm" id="pdf-btn" onclick="exportPDF()" style="display:none">Exportar PDF</button>
-          <button class="btn-sm" id="clear-btn" onclick="clearOutput()" style="display:none">Limpar</button>
+        <div class="generate-bar">
+          <div class="gen-status" id="gen-status">Preencha o CV e a vaga para começar</div>
+          <button class="btn-accent" id="gen-btn" onclick="generate()" disabled>Gerar →</button>
         </div>
       </div>
-      <div class="output-body" id="output-body">
-        <div class="empty-state" id="empty-state">
-          <div class="empty-icon">CV</div>
-          <h3>Pronto para gerar</h3>
-          <p>Adicione o Master CV, cole a vaga e clique em <em>Gerar</em>.</p>
+
+      <!-- RIGHT -->
+      <div class="right-panel">
+        <div class="output-header">
+          <span class="output-title">Currículo gerado</span>
+          <div class="output-actions">
+            <button class="btn-sm" id="copy-btn" onclick="copyOutput()" style="display:none">Copiar</button>
+            <button class="btn-sm" id="pdf-btn" onclick="exportPDF()" style="display:none">Exportar PDF</button>
+            <button class="btn-sm" id="clear-btn" onclick="clearOutput()" style="display:none">Limpar</button>
+          </div>
         </div>
-      </div>
-      <div class="adjust-bar" id="adjust-bar" style="display:none">
-        <input class="adjust-input" id="adjust-input"
-          placeholder="Ex: 'Deixe mais conciso', 'Enfatize liderança técnica'..."
-          onkeydown="if(event.key==='Enter') adjust()"/>
-        <button class="btn-primary" onclick="adjust()" id="adjust-btn">Ajustar</button>
+        <div class="output-body" id="output-body">
+          <div class="empty-state" id="empty-state">
+            <div class="empty-icon">CV</div>
+            <h3>Pronto para gerar</h3>
+            <p>Adicione o Master CV, cole a vaga e clique em <em>Gerar</em>.</p>
+          </div>
+        </div>
+        <div class="adjust-bar" id="adjust-bar" style="display:none">
+          <input class="adjust-input" id="adjust-input"
+            placeholder="Ex: 'Deixe mais conciso', 'Enfatize liderança técnica'..."
+            onkeydown="if(event.key==='Enter') adjust()" />
+          <button class="btn-primary" onclick="adjust()" id="adjust-btn">Ajustar</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- ADMIN PANEL -->
-<div id="admin-panel">
-  <div class="admin-card">
+  <!-- ADMIN PANEL -->
+  <div id="admin-panel">
+    <div class="admin-card">
+      <div class="admin-header">
+        <span class="admin-title">Administração</span>
+        <button class="btn-sm" onclick="closeAdmin()">Fechar</button>
+      </div>
+      <div class="tab-bar" style="padding: 0 16px;">
+        <button class="tab active" id="admin-tab-users" onclick="switchAdminTab('users')">Usuários</button>
+        <button class="tab" id="admin-tab-usage" onclick="switchAdminTab('usage')">Uso</button>
+      </div>
+      <div class="admin-body" id="admin-body-users">
+        <div class="admin-form">
+          <div class="admin-form-title">Novo usuário</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Usuário</label>
+              <input class="form-input" id="new-username" placeholder="joao.silva" />
+            </div>
+            <div class="form-group">
+              <label>Nome</label>
+              <input class="form-input" id="new-displayname" placeholder="João Silva" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Senha</label>
+              <input class="form-input" type="password" id="new-password" placeholder="••••••••" />
+            </div>
+            <div class="form-group" style="justify-content:flex-end; padding-top:18px;">
+              <label
+                style="display:flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:500;color:var(--ink-2)">
+                <input type="checkbox" id="new-is-admin" /> Admin
+              </label>
+            </div>
+          </div>
+          <button class="btn-sm" onclick="createUser()" style="align-self:flex-start">Criar usuário</button>
+          <div id="create-error" style="font-size:12px;color:var(--accent);display:none"></div>
+        </div>
+        <div id="users-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+      <div class="admin-body" id="admin-body-usage" style="display:none">
+        <div id="usage-content"></div>
+      </div>
+    </div>
     <div class="admin-header">
       <span class="admin-title">Gerenciar usuários</span>
       <button class="btn-sm" onclick="closeAdmin()">Fechar</button>
@@ -167,21 +215,22 @@
         <div class="form-row">
           <div class="form-group">
             <label>Usuário</label>
-            <input class="form-input" id="new-username" placeholder="joao.silva"/>
+            <input class="form-input" id="new-username" placeholder="joao.silva" />
           </div>
           <div class="form-group">
             <label>Nome</label>
-            <input class="form-input" id="new-displayname" placeholder="João Silva"/>
+            <input class="form-input" id="new-displayname" placeholder="João Silva" />
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>Senha</label>
-            <input class="form-input" type="password" id="new-password" placeholder="••••••••"/>
+            <input class="form-input" type="password" id="new-password" placeholder="••••••••" />
           </div>
           <div class="form-group" style="justify-content:flex-end; padding-top:18px;">
-            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:500;color:var(--ink-2)">
-              <input type="checkbox" id="new-is-admin"/> Admin
+            <label
+              style="display:flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:500;color:var(--ink-2)">
+              <input type="checkbox" id="new-is-admin" /> Admin
             </label>
           </div>
         </div>
@@ -191,50 +240,72 @@
       <div id="users-list" style="display:flex;flex-direction:column;gap:8px;"></div>
     </div>
   </div>
-</div>
+  </div>
 
-<!-- PROFILE MODAL -->
-<div id="profile-panel">
-  <div class="admin-card" style="width:400px">
-    <div class="admin-header">
-      <span class="admin-title">Meu perfil</span>
-      <button class="btn-sm" onclick="closeProfile()">Fechar</button>
-    </div>
-    <div class="admin-body">
-      <div class="admin-form">
-        <div class="admin-form-title">Dados pessoais</div>
-        <div class="form-group">
-          <label>Usuário</label>
-          <input class="form-input" id="profile-username" disabled style="opacity:0.5;cursor:not-allowed"/>
-        </div>
-        <div class="form-group">
-          <label>Nome de exibição</label>
-          <input class="form-input" id="profile-displayname" placeholder="Seu nome"/>
-        </div>
-        <button class="btn-sm" onclick="saveProfileName()">Salvar nome</button>
-        <div id="profile-name-msg" style="font-size:12px;display:none"></div>
+  <!-- PROFILE MODAL -->
+  <div id="profile-panel">
+    <div class="admin-card" style="width:400px">
+      <div class="admin-header">
+        <span class="admin-title">Meu perfil</span>
+        <button class="btn-sm" onclick="closeProfile()">Fechar</button>
       </div>
-      <div class="admin-form">
-        <div class="admin-form-title">Alterar senha</div>
-        <div class="form-group">
-          <label>Senha atual</label>
-          <input class="form-input" type="password" id="profile-current-pass" placeholder="••••••••"/>
+      <div class="admin-body">
+        <div class="admin-form">
+          <div class="admin-form-title">Dados pessoais</div>
+          <div class="form-group">
+            <label>Usuário</label>
+            <input class="form-input" id="profile-username" disabled style="opacity:0.5;cursor:not-allowed" />
+          </div>
+          <div class="form-group">
+            <label>Nome de exibição</label>
+            <input class="form-input" id="profile-displayname" placeholder="Seu nome" />
+          </div>
+          <button class="btn-sm" onclick="saveProfileName()">Salvar nome</button>
+          <div id="profile-name-msg" style="font-size:12px;display:none"></div>
         </div>
-        <div class="form-group">
-          <label>Nova senha</label>
-          <input class="form-input" type="password" id="profile-new-pass" placeholder="••••••••"/>
+        <div class="admin-form">
+          <div class="admin-form-title">Alterar senha</div>
+          <div class="form-group">
+            <label>Senha atual</label>
+            <input class="form-input" type="password" id="profile-current-pass" placeholder="••••••••" />
+          </div>
+          <div class="form-group">
+            <label>Nova senha</label>
+            <input class="form-input" type="password" id="profile-new-pass" placeholder="••••••••" />
+          </div>
+          <div class="form-group">
+            <label>Confirmar nova senha</label>
+            <input class="form-input" type="password" id="profile-confirm-pass" placeholder="••••••••" />
+          </div>
+          <button class="btn-sm" onclick="saveProfilePassword()">Alterar senha</button>
+          <div id="profile-pass-msg" style="font-size:12px;display:none"></div>
         </div>
-        <div class="form-group">
-          <label>Confirmar nova senha</label>
-          <input class="form-input" type="password" id="profile-confirm-pass" placeholder="••••••••"/>
-        </div>
-        <button class="btn-sm" onclick="saveProfilePassword()">Alterar senha</button>
-        <div id="profile-pass-msg" style="font-size:12px;display:none"></div>
       </div>
     </div>
   </div>
-</div>
 
-<script src="/static/app.js"></script>
+  <!-- DETAIL MODAL -->
+  <div id="detail-panel">
+    <div class="admin-card" style="width:700px;max-height:90vh">
+      <div class="admin-header">
+        <span class="admin-title">Detalhes da geração</span>
+        <button class="btn-sm" onclick="closeDetail()">Fechar</button>
+      </div>
+      <div class="tab-bar" style="padding:0 16px">
+        <button class="tab active" id="detail-tab-result" onclick="switchDetailTab('result')">Currículo</button>
+        <button class="tab" id="detail-tab-job" onclick="switchDetailTab('job')">Vaga</button>
+        <button class="tab" id="detail-tab-cv" onclick="switchDetailTab('cv')">CV Mestre</button>
+        <button class="tab" id="detail-tab-prompt" onclick="switchDetailTab('prompt')">Prompt</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:20px" id="detail-body"></div>
+      <div style="padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px">
+        <button class="btn-sm" onclick="restoreCV()">↩ Restaurar CV Mestre</button>
+        <button class="btn-sm" onclick="restorePrompt()">↩ Restaurar Prompt</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
 </body>
+
 </html>

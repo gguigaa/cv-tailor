@@ -77,6 +77,10 @@ class AdjustRequest(BaseModel):
 class GenerateOut(BaseModel):
     id: int
     result: str
+    lang: str
+    job_description: str
+    prompt_used: Optional[str]
+    cv_snapshot: Optional[str]
     created_at: datetime
 
     model_config = {"from_attributes": True}

@@ -293,18 +293,17 @@ async function loadHistory() {
 }
 
 async function loadHistoryItem(id) {
-    switchTab('cv'); // switch to show output
-    const item = await api('GET', `/api/cv/history/${id}`);
-    lastOutput = item.result; lastGeneratedId = item.id;
-    clearOutputSilent();
-    renderOutput(item.result);
+  const item = await api('GET', `/api/cv/history/${id}`);
+  openDetailModal(item);
 }
 
 // ── ADMIN ──
 async function openAdmin() {
-    document.getElementById('admin-panel').classList.add('open');
-    loadUsers();
+  document.getElementById('admin-panel').classList.add('open');
+  switchAdminTab('users');
+  loadUsers();
 }
+
 function closeAdmin() { document.getElementById('admin-panel').classList.remove('open'); }
 
 async function loadUsers() {
@@ -380,58 +379,157 @@ async function exportPDF() {
 }
 
 function openProfile() {
-  document.getElementById('profile-username').value = currentUser.username;
-  document.getElementById('profile-displayname').value = currentUser.display_name || '';
-  document.getElementById('profile-current-pass').value = '';
-  document.getElementById('profile-new-pass').value = '';
-  document.getElementById('profile-confirm-pass').value = '';
-  document.getElementById('profile-name-msg').style.display = 'none';
-  document.getElementById('profile-pass-msg').style.display = 'none';
-  document.getElementById('profile-panel').classList.add('open');
-}
-
-function closeProfile() {
-  document.getElementById('profile-panel').classList.remove('open');
-}
-
-async function saveProfileName() {
-  const display_name = document.getElementById('profile-displayname').value.trim();
-  const msg = document.getElementById('profile-name-msg');
-  try {
-    const updated = await api('PATCH', '/api/auth/me', { display_name });
-    currentUser = updated;
-    document.getElementById('user-name-label').textContent = updated.display_name || updated.username;
-    document.getElementById('user-initial').textContent = (updated.display_name || updated.username)[0].toUpperCase();
-    msg.textContent = '✓ Nome atualizado'; msg.style.color = 'var(--green)'; msg.style.display = '';
-    setTimeout(() => msg.style.display = 'none', 2500);
-  } catch(e) {
-    msg.textContent = e.message; msg.style.color = 'var(--accent)'; msg.style.display = '';
-  }
-}
-
-async function saveProfilePassword() {
-  const current_password = document.getElementById('profile-current-pass').value;
-  const new_password = document.getElementById('profile-new-pass').value;
-  const confirm = document.getElementById('profile-confirm-pass').value;
-  const msg = document.getElementById('profile-pass-msg');
-
-  if (new_password !== confirm) {
-    msg.textContent = 'As senhas não coincidem'; msg.style.color = 'var(--accent)'; msg.style.display = '';
-    return;
-  }
-  if (new_password.length < 6) {
-    msg.textContent = 'A senha deve ter ao menos 6 caracteres'; msg.style.color = 'var(--accent)'; msg.style.display = '';
-    return;
-  }
-
-  try {
-    await api('PATCH', '/api/auth/me', { current_password, new_password });
-    msg.textContent = '✓ Senha alterada com sucesso'; msg.style.color = 'var(--green)'; msg.style.display = '';
+    document.getElementById('profile-username').value = currentUser.username;
+    document.getElementById('profile-displayname').value = currentUser.display_name || '';
     document.getElementById('profile-current-pass').value = '';
     document.getElementById('profile-new-pass').value = '';
     document.getElementById('profile-confirm-pass').value = '';
-    setTimeout(() => msg.style.display = 'none', 2500);
-  } catch(e) {
-    msg.textContent = e.message; msg.style.color = 'var(--accent)'; msg.style.display = '';
-  }
+    document.getElementById('profile-name-msg').style.display = 'none';
+    document.getElementById('profile-pass-msg').style.display = 'none';
+    document.getElementById('profile-panel').classList.add('open');
+}
+
+function closeProfile() {
+    document.getElementById('profile-panel').classList.remove('open');
+}
+
+async function saveProfileName() {
+    const display_name = document.getElementById('profile-displayname').value.trim();
+    const msg = document.getElementById('profile-name-msg');
+    try {
+        const updated = await api('PATCH', '/api/auth/me', { display_name });
+        currentUser = updated;
+        document.getElementById('user-name-label').textContent = updated.display_name || updated.username;
+        document.getElementById('user-initial').textContent = (updated.display_name || updated.username)[0].toUpperCase();
+        msg.textContent = '✓ Nome atualizado'; msg.style.color = 'var(--green)'; msg.style.display = '';
+        setTimeout(() => msg.style.display = 'none', 2500);
+    } catch (e) {
+        msg.textContent = e.message; msg.style.color = 'var(--accent)'; msg.style.display = '';
+    }
+}
+
+async function saveProfilePassword() {
+    const current_password = document.getElementById('profile-current-pass').value;
+    const new_password = document.getElementById('profile-new-pass').value;
+    const confirm = document.getElementById('profile-confirm-pass').value;
+    const msg = document.getElementById('profile-pass-msg');
+
+    if (new_password !== confirm) {
+        msg.textContent = 'As senhas não coincidem'; msg.style.color = 'var(--accent)'; msg.style.display = '';
+        return;
+    }
+    if (new_password.length < 6) {
+        msg.textContent = 'A senha deve ter ao menos 6 caracteres'; msg.style.color = 'var(--accent)'; msg.style.display = '';
+        return;
+    }
+
+    try {
+        await api('PATCH', '/api/auth/me', { current_password, new_password });
+        msg.textContent = '✓ Senha alterada com sucesso'; msg.style.color = 'var(--green)'; msg.style.display = '';
+        document.getElementById('profile-current-pass').value = '';
+        document.getElementById('profile-new-pass').value = '';
+        document.getElementById('profile-confirm-pass').value = '';
+        setTimeout(() => msg.style.display = 'none', 2500);
+    } catch (e) {
+        msg.textContent = e.message; msg.style.color = 'var(--accent)'; msg.style.display = '';
+    }
+}
+
+function switchAdminTab(tab) {
+    document.getElementById('admin-tab-users').classList.toggle('active', tab === 'users');
+    document.getElementById('admin-tab-usage').classList.toggle('active', tab === 'usage');
+    document.getElementById('admin-body-users').style.display = tab === 'users' ? '' : 'none';
+    document.getElementById('admin-body-usage').style.display = tab === 'usage' ? '' : 'none';
+    if (tab === 'usage') loadUsage();
+}
+
+async function loadUsage() {
+    const content = document.getElementById('usage-content');
+    content.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-3);font-size:13px;">Carregando...</div>';
+    const users = await api('GET', '/api/admin/users-usage');
+    content.innerHTML = users.map(u => `
+    <div class="user-row" style="cursor:pointer" onclick="loadUserHistory(${u.id}, '${esc(u.display_name || u.username)}')">
+      <div class="user-row-info">
+        <div class="user-row-name">${esc(u.display_name || u.username)}</div>
+        <div class="user-row-meta">@${esc(u.username)} · ${u.last_generation ? new Date(u.last_generation).toLocaleDateString('pt-BR') : 'nunca'}</div>
+      </div>
+      <div style="font-size:13px;font-weight:600;color:var(--accent)">${u.total_generations} gerações</div>
+    </div>`).join('');
+}
+
+async function loadUserHistory(userId, userName) {
+    const content = document.getElementById('usage-content');
+    content.innerHTML = `
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+      <button class="btn-sm" onclick="loadUsage()">← Voltar</button>
+      <span style="font-size:13px;font-weight:500">${esc(userName)}</span>
+    </div>
+    <div id="user-history-list"><div style="padding:20px;text-align:center;color:var(--ink-3);font-size:13px;">Carregando...</div></div>`;
+
+    const items = await api('GET', `/api/admin/users-usage/${userId}`);
+    const list = document.getElementById('user-history-list');
+
+    if (!items.length) {
+        list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--ink-3);font-size:13px;">Nenhuma geração encontrada.</div>';
+        return;
+    }
+
+    list.innerHTML = items.map(i => `
+    <div class="history-item" onclick="openGenerationDetail(${i.id})">
+      <span class="history-snippet">${esc(i.job_description.slice(0, 80))}</span>
+      <span class="history-meta">${i.lang.toUpperCase()} · ${new Date(i.created_at).toLocaleDateString('pt-BR')}</span>
+    </div>`).join('');
+}
+
+async function openGenerationDetail(cvId) {
+    const item = await api('GET', `/api/admin/generated/${cvId}`);
+    openDetailModal(item);
+}
+
+let currentDetail = null;
+
+function openDetailModal(item) {
+    currentDetail = item;
+    switchDetailTab('result');
+    document.getElementById('detail-panel').classList.add('open');
+}
+
+function closeDetail() {
+    document.getElementById('detail-panel').classList.remove('open');
+    currentDetail = null;
+}
+
+function switchDetailTab(tab) {
+    ['result', 'job', 'cv', 'prompt'].forEach(t => {
+        document.getElementById(`detail-tab-${t}`).classList.toggle('active', t === tab);
+    });
+    const body = document.getElementById('detail-body');
+    const content = {
+        result: currentDetail?.result,
+        job: currentDetail?.job_description,
+        cv: currentDetail?.cv_snapshot || '(não disponível — gerado antes desta funcionalidade)',
+        prompt: currentDetail?.prompt_used || '(não disponível — gerado antes desta funcionalidade)',
+    };
+    body.innerHTML = `<pre style="font-family:var(--font-m);font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word">${esc(content[tab] || '')}</pre>`;
+}
+
+function restoreCV() {
+    if (!currentDetail?.cv_snapshot) return;
+    // Detecta idioma e restaura no campo correto
+    const field = document.getElementById('cv-text');
+    field.value = currentDetail.cv_snapshot;
+    closeDetail();
+    switchTab('cv');
+    // Salva automaticamente
+    saveCV();
+    document.getElementById('cv-saved').style.display = '';
+    setTimeout(() => document.getElementById('cv-saved').style.display = 'none', 2000);
+}
+
+function restorePrompt() {
+    if (!currentDetail?.prompt_used) return;
+    document.getElementById('prompt-text').value = currentDetail.prompt_used;
+    closeDetail();
+    switchTab('prompt');
+    savePrompt();
 }
