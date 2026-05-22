@@ -265,6 +265,8 @@ header {
     background: var(--paper);
     padding: 0 18px;
     gap: 2px;
+    height: 45px;
+    align-items: center;
 }
 
 .tab {
@@ -436,11 +438,13 @@ textarea::placeholder {
 }
 
 .output-header {
-    padding: 5px 10px 4px 10px;
+    padding: 0 20px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    height: 45px;
+    flex-shrink: 0;
 }
 
 .output-title {
