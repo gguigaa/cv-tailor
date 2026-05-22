@@ -179,6 +179,7 @@ function setLoading(on) {
 async function generate() {
     if (isLoading) return;
     setLoading(true);
+    await api('PUT', '/api/profile/', { base_prompt: document.getElementById('prompt-text').value });
     clearOutputSilent();
     showLoadingCard();
     conversationHistory = [];
@@ -376,4 +377,61 @@ async function exportPDF() {
         btn.textContent = 'Exportar PDF';
         btn.disabled = false;
     }
+}
+
+function openProfile() {
+  document.getElementById('profile-username').value = currentUser.username;
+  document.getElementById('profile-displayname').value = currentUser.display_name || '';
+  document.getElementById('profile-current-pass').value = '';
+  document.getElementById('profile-new-pass').value = '';
+  document.getElementById('profile-confirm-pass').value = '';
+  document.getElementById('profile-name-msg').style.display = 'none';
+  document.getElementById('profile-pass-msg').style.display = 'none';
+  document.getElementById('profile-panel').classList.add('open');
+}
+
+function closeProfile() {
+  document.getElementById('profile-panel').classList.remove('open');
+}
+
+async function saveProfileName() {
+  const display_name = document.getElementById('profile-displayname').value.trim();
+  const msg = document.getElementById('profile-name-msg');
+  try {
+    const updated = await api('PATCH', '/api/auth/me', { display_name });
+    currentUser = updated;
+    document.getElementById('user-name-label').textContent = updated.display_name || updated.username;
+    document.getElementById('user-initial').textContent = (updated.display_name || updated.username)[0].toUpperCase();
+    msg.textContent = '✓ Nome atualizado'; msg.style.color = 'var(--green)'; msg.style.display = '';
+    setTimeout(() => msg.style.display = 'none', 2500);
+  } catch(e) {
+    msg.textContent = e.message; msg.style.color = 'var(--accent)'; msg.style.display = '';
+  }
+}
+
+async function saveProfilePassword() {
+  const current_password = document.getElementById('profile-current-pass').value;
+  const new_password = document.getElementById('profile-new-pass').value;
+  const confirm = document.getElementById('profile-confirm-pass').value;
+  const msg = document.getElementById('profile-pass-msg');
+
+  if (new_password !== confirm) {
+    msg.textContent = 'As senhas não coincidem'; msg.style.color = 'var(--accent)'; msg.style.display = '';
+    return;
+  }
+  if (new_password.length < 6) {
+    msg.textContent = 'A senha deve ter ao menos 6 caracteres'; msg.style.color = 'var(--accent)'; msg.style.display = '';
+    return;
+  }
+
+  try {
+    await api('PATCH', '/api/auth/me', { current_password, new_password });
+    msg.textContent = '✓ Senha alterada com sucesso'; msg.style.color = 'var(--green)'; msg.style.display = '';
+    document.getElementById('profile-current-pass').value = '';
+    document.getElementById('profile-new-pass').value = '';
+    document.getElementById('profile-confirm-pass').value = '';
+    setTimeout(() => msg.style.display = 'none', 2500);
+  } catch(e) {
+    msg.textContent = e.message; msg.style.color = 'var(--accent)'; msg.style.display = '';
+  }
 }
