@@ -55,6 +55,9 @@ app.include_router(cv.router)
 # Serve frontend static files
 STATIC_DIR = "/app/frontend"
 if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
     @app.get("/{full_path:path}", include_in_schema=False)
     async def spa_fallback(full_path: str):
         return FileResponse(f"{STATIC_DIR}/index.html")
+
