@@ -5,4 +5,4 @@ pipelines:
           name: Deploy
           script:
             - ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts
-            - ssh -vvv $SERVER_USER@$SERVER_HOST "echo ok"
+            - ssh $SERVER_USER@$SERVER_HOST "cd $SERVER_PATH && git pull && docker compose up -d --build"
