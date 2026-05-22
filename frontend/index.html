@@ -209,36 +209,6 @@
       <span class="admin-title">Gerenciar usuários</span>
       <button class="btn-sm" onclick="closeAdmin()">Fechar</button>
     </div>
-    <div class="admin-body" id="admin-body">
-      <div class="admin-form">
-        <div class="admin-form-title">Novo usuário</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Usuário</label>
-            <input class="form-input" id="new-username" placeholder="joao.silva" />
-          </div>
-          <div class="form-group">
-            <label>Nome</label>
-            <input class="form-input" id="new-displayname" placeholder="João Silva" />
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Senha</label>
-            <input class="form-input" type="password" id="new-password" placeholder="••••••••" />
-          </div>
-          <div class="form-group" style="justify-content:flex-end; padding-top:18px;">
-            <label
-              style="display:flex;align-items:center;gap:6px;cursor:pointer;text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:500;color:var(--ink-2)">
-              <input type="checkbox" id="new-is-admin" /> Admin
-            </label>
-          </div>
-        </div>
-        <button class="btn-sm" onclick="createUser()" style="align-self:flex-start">Criar usuário</button>
-        <div id="create-error" style="font-size:12px;color:var(--accent);display:none"></div>
-      </div>
-      <div id="users-list" style="display:flex;flex-direction:column;gap:8px;"></div>
-    </div>
   </div>
   </div>
 
