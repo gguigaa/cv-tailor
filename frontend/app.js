@@ -352,30 +352,49 @@ async function deleteUser(id) {
 }
 
 async function exportPDF() {
-    if (!lastOutput) return;
-    const btn = document.getElementById('pdf-btn');
-    btn.textContent = 'Gerando...';
-    btn.disabled = true;
+  if (!lastOutput) return;
+  const btn = document.getElementById('pdf-btn');
+  btn.textContent = 'Gerando...';
+  btn.disabled = true;
 
-    const container = document.createElement('div');
-    container.className = 'pdf-preview';
-    container.style.cssText = 'padding:20mm 20mm 20mm 20mm; width:170mm; box-sizing:border-box;';
-    container.innerHTML = marked.parse(lastOutput);
+  const container = document.createElement('div');
+  container.className = 'pdf-preview';
+  container.style.cssText = `
+    padding: 15mm 18mm;
+    width: 210mm;
+    box-sizing: border-box;
+    font-family: 'Georgia', serif;
+    font-size: 9.5pt;
+    line-height: 1.5;
+    color: #1a1814;
+    text-align: justify;
+    word-break: normal;
+    overflow-wrap: break-word;
+    hyphens: auto;
+  `;
+  container.innerHTML = marked.parse(lastOutput);
 
-    const opt = {
-        margin: 0,
-        filename: 'curriculo.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+  // Aplicar justificação em todos os parágrafos gerados
+  container.querySelectorAll('p, li').forEach(el => {
+    el.style.textAlign = 'justify';
+    el.style.wordBreak = 'normal';
+    el.style.overflowWrap = 'break-word';
+  });
 
-    try {
-        await html2pdf().set(opt).from(container).save();
-    } finally {
-        btn.textContent = 'Exportar PDF';
-        btn.disabled = false;
-    }
+  const opt = {
+    margin: 0,
+    filename: 'curriculo.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    await html2pdf().set(opt).from(container).save();
+  } finally {
+    btn.textContent = 'Exportar PDF';
+    btn.disabled = false;
+  }
 }
 
 function openProfile() {
