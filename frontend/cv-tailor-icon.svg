@@ -1,0 +1,15 @@
+<svg width="512" height="512" viewBox="0 0 680 680" role="img" xmlns="http://www.w3.org/2000/svg">
+  <title>CV Tailor</title>
+  <desc>Letras CV onde o V tem uma gravata descendo até o vértice</desc>
+
+  <rect x="90" y="90" width="500" height="500" rx="80" fill="#1a1814"/>
+
+  <path fill="none" stroke="#f5f2ed" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" d="M 290 210 A 110 110 0 1 0 290 470" />
+
+  <line fill="none" stroke="#c84b2f" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" x1="320" y1="210" x2="430" y2="460" />
+  <line fill="none" stroke="#c84b2f" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" x1="540" y1="210" x2="430" y2="460" />
+
+  <polygon fill="#f5f2ed" points="418,210 442,210 448,238 412,238" />
+  <polygon fill="#1a1814" stroke="#f5f2ed" stroke-width="3" points="412,238 448,238 436,460 424,460" />
+  <polygon fill="#f5f2ed" points="424,448 436,448 430,472" />
+</svg>
