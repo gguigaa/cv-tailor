@@ -359,13 +359,10 @@ async function exportPDF() {
 
   const container = document.createElement('div');
   container.style.cssText = `
-    position: fixed;
-    left: -9999px;
-    top: 0;
     width: 794px;
     padding: 60px 72px;
     box-sizing: border-box;
-    font-family: 'Georgia', serif;
+    font-family: Georgia, serif;
     font-size: 11px;
     line-height: 1.6;
     color: #1a1814;
@@ -373,7 +370,6 @@ async function exportPDF() {
   `;
   container.innerHTML = marked.parse(lastOutput);
 
-  // Estilos internos
   container.querySelectorAll('h1').forEach(el => {
     el.style.cssText = 'font-size:18px;margin-bottom:4px;border-bottom:2px solid #c84b2f;padding-bottom:6px;';
   });
@@ -390,17 +386,16 @@ async function exportPDF() {
     el.style.cssText = 'padding-left:16px;margin:3px 0;';
   });
 
-  document.body.appendChild(container);
-
   const opt = {
     margin: 0,
     filename: 'curriculo.pdf',
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { 
-      scale: 2, 
+    html2canvas: {
+      scale: 2,
       useCORS: true,
       width: 794,
-      windowWidth: 794
+      windowWidth: 794,
+      logging: false
     },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
@@ -408,7 +403,6 @@ async function exportPDF() {
   try {
     await html2pdf().set(opt).from(container).save();
   } finally {
-    document.body.removeChild(container);
     btn.textContent = 'Exportar PDF';
     btn.disabled = false;
   }
