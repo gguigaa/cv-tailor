@@ -358,40 +358,57 @@ async function exportPDF() {
   btn.disabled = true;
 
   const container = document.createElement('div');
-  container.className = 'pdf-preview';
   container.style.cssText = `
-    padding: 15mm 18mm;
-    width: 210mm;
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 794px;
+    padding: 60px 72px;
     box-sizing: border-box;
     font-family: 'Georgia', serif;
-    font-size: 9.5pt;
-    line-height: 1.5;
+    font-size: 11px;
+    line-height: 1.6;
     color: #1a1814;
-    text-align: justify;
-    word-break: normal;
-    overflow-wrap: break-word;
-    hyphens: auto;
+    background: white;
   `;
   container.innerHTML = marked.parse(lastOutput);
 
-  // Aplicar justificação em todos os parágrafos gerados
-  container.querySelectorAll('p, li').forEach(el => {
-    el.style.textAlign = 'justify';
-    el.style.wordBreak = 'normal';
-    el.style.overflowWrap = 'break-word';
+  // Estilos internos
+  container.querySelectorAll('h1').forEach(el => {
+    el.style.cssText = 'font-size:18px;margin-bottom:4px;border-bottom:2px solid #c84b2f;padding-bottom:6px;';
   });
+  container.querySelectorAll('h2').forEach(el => {
+    el.style.cssText = 'font-size:13px;color:#c84b2f;margin-top:14px;margin-bottom:3px;border-bottom:1px solid #e4e0d9;padding-bottom:3px;';
+  });
+  container.querySelectorAll('h3').forEach(el => {
+    el.style.cssText = 'font-size:11px;font-weight:600;margin-top:8px;margin-bottom:2px;';
+  });
+  container.querySelectorAll('p, li').forEach(el => {
+    el.style.cssText = 'text-align:justify;margin:3px 0;';
+  });
+  container.querySelectorAll('ul').forEach(el => {
+    el.style.cssText = 'padding-left:16px;margin:3px 0;';
+  });
+
+  document.body.appendChild(container);
 
   const opt = {
     margin: 0,
     filename: 'curriculo.pdf',
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, windowWidth: 794 },
+    html2canvas: { 
+      scale: 2, 
+      useCORS: true,
+      width: 794,
+      windowWidth: 794
+    },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
   try {
     await html2pdf().set(opt).from(container).save();
   } finally {
+    document.body.removeChild(container);
     btn.textContent = 'Exportar PDF';
     btn.disabled = false;
   }
