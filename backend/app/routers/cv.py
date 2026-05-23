@@ -147,114 +147,114 @@ async def export_pdf_content(
     accent = body.accent_color or (profile.accent_color if profile else None) or "#2a5f4b"
 
     # Converter Markdown para HTML
-    html_content = md.markdown(body.content, extensions=['extra'])
+    html_content = md.markdown(
+        body.content,
+        extensions=['extra', 'nl2br'],
+        extension_configs={
+            'extra': {}
+        }
+    )
+
+    css = """
+    @page {
+        size: A4;
+        margin: 18mm 18mm 18mm 18mm;
+    }
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+    body {
+        font-family: 'DejaVu Serif', Georgia, serif;
+        font-size: 9.5pt;
+        line-height: 1.6;
+        color: #1a1814;
+        text-align: justify;
+    }
+    h1 {
+        font-size: 16pt;
+        font-weight: bold;
+        color: #1a1814;
+        border-bottom: 2px solid ACCENT;
+        padding-bottom: 5px;
+        margin-bottom: 4px;
+        text-align: left;
+    }
+    h2 {
+        font-size: 11pt;
+        font-weight: bold;
+        color: ACCENT;
+        border-bottom: 1px solid #d4d0ca;
+        padding-bottom: 3px;
+        margin-top: 14px;
+        margin-bottom: 5px;
+        text-align: left;
+        page-break-after: avoid;
+    }
+    h3 {
+        font-size: 9.5pt;
+        font-weight: bold;
+        color: #1a1814;
+        margin-top: 8px;
+        margin-bottom: 2px;
+        text-align: left;
+        page-break-after: avoid;
+    }
+    p {
+        margin-bottom: 4px;
+        text-align: justify;
+        word-break: normal;
+        overflow-wrap: normal;
+        orphans: 3;
+        widows: 3;
+    }
+    ul, ol {
+        padding-left: 18px;
+        margin-top: 4px;
+        margin-bottom: 6px;
+    }
+    li {
+        margin-bottom: 3px;
+        text-align: justify;
+        word-break: normal;
+        overflow-wrap: normal;
+        display: list-item;
+    }
+    li p {
+        margin: 0;
+    }
+    hr {
+        border: none;
+        border-top: 1px solid #d4d0ca;
+        margin: 8px 0;
+    }
+    a {
+        color: ACCENT;
+        text-decoration: none;
+    }
+    strong {
+        font-weight: bold;
+    }
+    h2, h3 {
+        page-break-inside: avoid;
+    }
+    h2 + *, h3 + * {
+        page-break-before: avoid;
+    }
+    """.replace("ACCENT", accent)
 
     # Template HTML completo com CSS profissional
     html = f"""<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8"/>
-<style>
-  @page {{
-    size: A4;
-    margin: 18mm 18mm 18mm 18mm;
-  }}
-
-  * {{
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }}
-
-  body {{
-    font-family: 'DejaVu Serif', Georgia, serif;
-    font-size: 9.5pt;
-    line-height: 1.6;
-    color: #1a1814;
-    text-align: justify;
-    hyphens: auto;
-    -webkit-hyphens: auto;
-  }}
-
-  h1 {{
-    font-size: 16pt;
-    font-weight: bold;
-    color: #1a1814;
-    border-bottom: 2px solid {accent};
-    padding-bottom: 5px;
-    margin-bottom: 4px;
-    text-align: left;
-  }}
-
-  h2 {{
-    font-size: 11pt;
-    font-weight: bold;
-    color: {accent};
-    border-bottom: 1px solid #d4d0ca;
-    padding-bottom: 3px;
-    margin-top: 14px;
-    margin-bottom: 5px;
-    text-align: left;
-    page-break-after: avoid;
-  }}
-
-  h3 {{
-    font-size: 9.5pt;
-    font-weight: bold;
-    color: #1a1814;
-    margin-top: 8px;
-    margin-bottom: 2px;
-    text-align: left;
-    page-break-after: avoid;
-  }}
-
-  p {{
-    margin-bottom: 4px;
-    text-align: justify;
-    hyphens: auto;
-    orphans: 3;
-    widows: 3;
-  }}
-
-  ul {{
-    padding-left: 16px;
-    margin-bottom: 4px;
-  }}
-
-  li {{
-    margin-bottom: 2px;
-    text-align: justify;
-    hyphens: auto;
-  }}
-
-  hr {{
-    border: none;
-    border-top: 1px solid #d4d0ca;
-    margin: 8px 0;
-  }}
-
-  a {{
-    color: {accent};
-    text-decoration: none;
-  }}
-
-  strong {{
-    font-weight: bold;
-  }}
-
-  h2, h3 {{
-    page-break-inside: avoid;
-  }}
-
-  h2 + *, h3 + * {{
-    page-break-before: avoid;
-  }}
-</style>
-</head>
-<body>
-{html_content}
-</body>
-</html>"""
+    <html lang="pt-BR">
+    <head>
+    <meta charset="UTF-8"/>
+    <style>{css}</style>
+    </head>
+    <body>
+    {html_content}
+    </body>
+    </html>"""
 
     pdf_bytes = WeasyHTML(string=html).write_pdf()
 
