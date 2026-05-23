@@ -379,167 +379,37 @@ async function exportPDF() {
     const btn = document.getElementById('pdf-btn');
     btn.textContent = 'Gerando...';
     btn.disabled = true;
-
+  
     try {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-
-        const pageWidth = 210;
-        const margin = 18;
-        const contentWidth = pageWidth - margin * 2;
-        let y = margin;
-        const pageHeight = 297;
-        const bottomMargin = 18;
-        const accent = currentAccentRgb;
-
-        function checkPage(neededSpace = 8) {
-            if (y + neededSpace > pageHeight - bottomMargin) {
-                doc.addPage();
-                y = margin;
-                return true;
-            }
-            return false;
-        }
-
-        function drawHRule(color) {
-            doc.setDrawColor(...color);
-            doc.setLineWidth(0.3);
-            doc.line(margin, y, pageWidth - margin, y);
-            y += 3;
-        }
-
-        function blockHeight(text, fontSize, width) {
-            doc.setFontSize(fontSize);
-            const lines = doc.splitTextToSize(text, width);
-            return lines.length * (fontSize / 10) * 5;
-        }
-
-        // Pré-processar linhas em blocos
-        const rawLines = lastOutput.split('\n');
-        const blocks = [];
-        let i = 0;
-
-        while (i < rawLines.length) {
-            const line = rawLines[i].trim();
-            if (!line) { blocks.push({ type: 'space' }); i++; continue; }
-
-            if (line === '---') { blocks.push({ type: 'hr' }); i++; continue; }
-
-            if (line.startsWith('# ')) {
-                // Agrupa título + conteúdo seguinte para evitar quebra logo após o título
-                blocks.push({ type: 'h1', text: line.replace('# ', '') });
-                i++; continue;
-            }
-
-            if (line.startsWith('## ')) {
-                // Coleta o bloco inteiro da seção para estimar tamanho
-                const sectionLines = [];
-                let j = i + 1;
-                while (j < rawLines.length && !rawLines[j].trim().startsWith('## ') && !rawLines[j].trim().startsWith('# ')) {
-                    sectionLines.push(rawLines[j]);
-                    j++;
-                }
-                blocks.push({ type: 'h2', text: line.replace('## ', ''), sectionLines });
-                i++; continue;
-            }
-
-            if (line.startsWith('### ')) {
-                blocks.push({ type: 'h3', text: line.replace('### ', '') });
-                i++; continue;
-            }
-
-            if (line.startsWith('- ') || line.startsWith('* ')) {
-                blocks.push({ type: 'li', text: line.replace(/^[-*] /, '').replace(/\*\*(.*?)\*\*/g, '$1') });
-                i++; continue;
-            }
-
-            blocks.push({ type: 'p', text: line.replace(/\*\*(.*?)\*\*/g, '$1') });
-            i++;
-        }
-
-        // Renderizar blocos
-        for (const block of blocks) {
-            if (block.type === 'space') { y += 2; continue; }
-
-            if (block.type === 'hr') {
-                y += 2;
-                drawHRule([180, 180, 175]);
-                y += 2;
-                continue;
-            }
-
-            if (block.type === 'h1') {
-                checkPage(14);
-                doc.setFontSize(16);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(26, 24, 20);
-                const lines = doc.splitTextToSize(block.text, contentWidth);
-                lines.forEach(l => { doc.text(l, margin, y); y += 8; });
-                drawHRule(accent);
-                continue;
-            }
-
-            if (block.type === 'h2') {
-                // Estima altura mínima da seção (título + pelo menos 2 linhas de conteúdo)
-                const minHeight = 18;
-                checkPage(minHeight);
-                y += 3;
-                doc.setFontSize(11);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(...accent);
-                const lines = doc.splitTextToSize(block.text, contentWidth);
-                lines.forEach(l => { doc.text(l, margin, y); y += 6; });
-                drawHRule([210, 206, 200]);
-                continue;
-            }
-
-            if (block.type === 'h3') {
-                checkPage(10);
-                y += 1;
-                doc.setFontSize(10);
-                doc.setFont('helvetica', 'bold');
-                doc.setTextColor(26, 24, 20);
-                const lines = doc.splitTextToSize(block.text, contentWidth);
-                lines.forEach(l => { doc.text(l, margin, y); y += 5; });
-                continue;
-            }
-
-            if (block.type === 'li') {
-                doc.setFontSize(9);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(26, 24, 20);
-                const wrapped = doc.splitTextToSize(block.text, contentWidth - 5);
-                const needed = wrapped.length * 4.5 + 2;
-                checkPage(needed);
-                wrapped.forEach((wl, idx) => {
-                    if (idx === 0) doc.text('•', margin, y);
-                    doc.text(wl, margin + 4, y);
-                    y += 4.5;
-                });
-                continue;
-            }
-
-            if (block.type === 'p') {
-                doc.setFontSize(9);
-                doc.setFont('helvetica', 'normal');
-                doc.setTextColor(26, 24, 20);
-                const wrapped = doc.splitTextToSize(block.text, contentWidth);
-                const needed = wrapped.length * 4.5 + 2;
-                checkPage(needed);
-                wrapped.forEach(wl => {
-                    doc.text(wl, margin, y, { align: 'justify', maxWidth: contentWidth });
-                    y += 4.5;
-                });
-                continue;
-            }
-        }
-
-        doc.save('curriculo.pdf');
+      const profile = await api('GET', '/api/profile/');
+      const response = await fetch('/api/cv/export-pdf-content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          content: lastOutput,
+          accent_color: profile.accent_color || '#2a5f4b'
+        })
+      });
+  
+      if (!response.ok) throw new Error('Erro ao gerar PDF');
+  
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'curriculo.pdf';
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch(e) {
+      alert('Erro ao gerar PDF: ' + e.message);
     } finally {
-        btn.textContent = 'Exportar PDF';
-        btn.disabled = false;
+      btn.textContent = 'Exportar PDF';
+      btn.disabled = false;
     }
-}
+  }
 
 function openProfile() {
     document.getElementById('profile-username').value = currentUser.username;

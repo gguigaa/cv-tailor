@@ -95,3 +95,8 @@ class GeneratedCVListItem(BaseModel):
     job_snippet: str  # first 80 chars of job_description
 
     model_config = {"from_attributes": True}
+
+
+class ExportPDFRequest(BaseModel):
+    content: str
+    accent_color: Optional[str] = None
