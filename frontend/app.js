@@ -293,15 +293,15 @@ async function loadHistory() {
 }
 
 async function loadHistoryItem(id) {
-  const item = await api('GET', `/api/cv/history/${id}`);
-  openDetailModal(item);
+    const item = await api('GET', `/api/cv/history/${id}`);
+    openDetailModal(item);
 }
 
 // ── ADMIN ──
 async function openAdmin() {
-  document.getElementById('admin-panel').classList.add('open');
-  switchAdminTab('users');
-  loadUsers();
+    document.getElementById('admin-panel').classList.add('open');
+    switchAdminTab('users');
+    loadUsers();
 }
 
 function closeAdmin() { document.getElementById('admin-panel').classList.remove('open'); }
@@ -356,105 +356,114 @@ async function exportPDF() {
     const btn = document.getElementById('pdf-btn');
     btn.textContent = 'Gerando...';
     btn.disabled = true;
-  
+
     try {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-  
-      const pageWidth = 210;
-      const margin = 18;
-      const contentWidth = pageWidth - margin * 2;
-      let y = margin;
-      const lineHeight = 5;
-      const pageHeight = 297;
-      const bottomMargin = 18;
-  
-      function checkPage(neededSpace = 8) {
-        if (y + neededSpace > pageHeight - bottomMargin) {
-          doc.addPage();
-          y = margin;
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+        const pageWidth = 210;
+        const margin = 18;
+        const contentWidth = pageWidth - margin * 2;
+        let y = margin;
+        const lineHeight = 5;
+        const pageHeight = 297;
+        const bottomMargin = 18;
+
+        function checkPage(neededSpace = 8) {
+            if (y + neededSpace > pageHeight - bottomMargin) {
+                doc.addPage();
+                y = margin;
+            }
         }
-      }
-  
-      function writeLine(text, fontSize, fontStyle, color) {
-        doc.setFontSize(fontSize);
-        doc.setFont('helvetica', fontStyle);
-        doc.setTextColor(...color);
-        const lines = doc.splitTextToSize(text, contentWidth);
-        lines.forEach(line => {
-          checkPage();
-          doc.text(line, margin, y, { align: 'justify', maxWidth: contentWidth });
-          y += lineHeight * (fontSize / 10);
-        });
-      }
-  
-      function drawHRule(color = [200, 75, 47]) {
-        checkPage(3);
-        doc.setDrawColor(...color);
-        doc.setLineWidth(0.4);
-        doc.line(margin, y, pageWidth - margin, y);
-        y += 3;
-      }
-  
-      // Parsear o Markdown linha a linha
-      const lines = lastOutput.split('\n');
-  
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-  
-        if (!line) {
-          y += 2;
-          continue;
+
+        function writeLine(text, fontSize, fontStyle, color) {
+            doc.setFontSize(fontSize);
+            doc.setFont('helvetica', fontStyle);
+            doc.setTextColor(...color);
+            const lines = doc.splitTextToSize(text, contentWidth);
+            lines.forEach(line => {
+                checkPage();
+                doc.text(line, margin, y, { align: 'justify', maxWidth: contentWidth });
+                y += lineHeight * (fontSize / 10);
+            });
         }
-  
-        if (line.startsWith('### ')) {
-          checkPage(8);
-          y += 1;
-          writeLine(line.replace('### ', ''), 10, 'bold', [26, 24, 20]);
-        } else if (line.startsWith('## ')) {
-          checkPage(10);
-          y += 3;
-          writeLine(line.replace('## ', ''), 11, 'bold', [200, 75, 47]);
-          drawHRule([228, 224, 217]);
-        } else if (line.startsWith('# ')) {
-          checkPage(12);
-          writeLine(line.replace('# ', ''), 16, 'bold', [26, 24, 20]);
-          drawHRule([200, 75, 47]);
-        } else if (line.startsWith('- ') || line.startsWith('* ')) {
-          const text = line.replace(/^[-*] /, '').replace(/\*\*(.*?)\*\*/g, '$1');
-          checkPage(6);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(26, 24, 20);
-          const wrapped = doc.splitTextToSize(text, contentWidth - 5);
-          wrapped.forEach((wl, idx) => {
-            checkPage();
-            if (idx === 0) doc.text('•', margin, y);
-            doc.text(wl, margin + 4, y);
-            y += 4.5;
-          });
-        } else {
-          // Parágrafo normal — remove bold markers
-          const text = line.replace(/\*\*(.*?)\*\*/g, '$1');
-          checkPage(6);
-          doc.setFontSize(9);
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(26, 24, 20);
-          const wrapped = doc.splitTextToSize(text, contentWidth);
-          wrapped.forEach(wl => {
-            checkPage();
-            doc.text(wl, margin, y, { align: 'justify', maxWidth: contentWidth });
-            y += 4.5;
-          });
+
+        function drawHRule(color = [42, 95, 75]) {
+            checkPage(3);
+            doc.setDrawColor(...color);
+            doc.setLineWidth(0.4);
+            doc.line(margin, y, pageWidth - margin, y);
+            y += 3;
         }
-      }
-  
-      doc.save('curriculo.pdf');
+
+        // Parsear o Markdown linha a linha
+        const lines = lastOutput.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i].trim();
+
+            if (!line) {
+                y += 2;
+                continue;
+            }
+
+            if (line === '---') {
+                checkPage(4);
+                y += 2;
+                doc.setDrawColor(180, 180, 175);
+                doc.setLineWidth(0.3);
+                doc.line(margin, y, pageWidth - margin, y);
+                y += 4;
+                continue;
+            }
+            if (line.startsWith('### ')) {
+                checkPage(8);
+                y += 1;
+                writeLine(line.replace('### ', ''), 10, 'bold', [26, 24, 20]);
+            } else if (line.startsWith('## ')) {
+                checkPage(10);
+                y += 3;
+                writeLine(line.replace('## ', ''), 11, 'bold', [42, 95, 75]);
+                drawHRule([228, 224, 217]);
+            } else if (line.startsWith('# ')) {
+                checkPage(12);
+                writeLine(line.replace('# ', ''), 16, 'bold', [26, 24, 20]);
+                drawHRule([42, 95, 75]);
+            } else if (line.startsWith('- ') || line.startsWith('* ')) {
+                const text = line.replace(/^[-*] /, '').replace(/\*\*(.*?)\*\*/g, '$1');
+                checkPage(6);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(26, 24, 20);
+                const wrapped = doc.splitTextToSize(text, contentWidth - 5);
+                wrapped.forEach((wl, idx) => {
+                    checkPage();
+                    if (idx === 0) doc.text('•', margin, y);
+                    doc.text(wl, margin + 4, y);
+                    y += 4.5;
+                });
+            } else {
+                // Parágrafo normal — remove bold markers
+                const text = line.replace(/\*\*(.*?)\*\*/g, '$1');
+                checkPage(6);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(26, 24, 20);
+                const wrapped = doc.splitTextToSize(text, contentWidth);
+                wrapped.forEach(wl => {
+                    checkPage();
+                    doc.text(wl, margin, y, { align: 'justify', maxWidth: contentWidth });
+                    y += 4.5;
+                });
+            }
+        }
+
+        doc.save('curriculo.pdf');
     } finally {
-      btn.textContent = 'Exportar PDF';
-      btn.disabled = false;
+        btn.textContent = 'Exportar PDF';
+        btn.disabled = false;
     }
-  }
+}
 
 function openProfile() {
     document.getElementById('profile-username').value = currentUser.username;
