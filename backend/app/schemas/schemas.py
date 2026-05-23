@@ -50,6 +50,7 @@ class CVProfileUpdate(BaseModel):
     cv_pt: Optional[str] = None
     cv_en: Optional[str] = None
     base_prompt: Optional[str] = None
+    accent_color: Optional[str] = None
 
 
 class CVProfileOut(BaseModel):
@@ -57,6 +58,7 @@ class CVProfileOut(BaseModel):
     cv_en: Optional[str]
     base_prompt: Optional[str]
     updated_at: Optional[datetime]
+    accent_color: Optional[str]
 
     model_config = {"from_attributes": True}
 

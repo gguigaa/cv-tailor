@@ -13,6 +13,7 @@ class CVProfile(Base):
     cv_en = Column(Text, nullable=True)   # Master CV em inglês
     base_prompt = Column(Text, nullable=True)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+    accent_color = Column(String(7), nullable=True)  # ex: "#2a5f4b"
 
     user = relationship("User", back_populates="cv_profile")
 

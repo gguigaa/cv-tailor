@@ -7,6 +7,19 @@ let lastOutput = '';
 let lastGeneratedId = null;
 let conversationHistory = [];
 let isLoading = false;
+const COLOR_PALETTE = [
+    { name: 'Verde floresta', hex: '#2a5f4b', rgb: [42, 95, 75] },
+    { name: 'Azul ardósia', hex: '#2d5582', rgb: [45, 85, 130] },
+    { name: 'Borgonha', hex: '#821e37', rgb: [130, 30, 55] },
+    { name: 'Cinza antracite', hex: '#3c3c41', rgb: [60, 60, 65] },
+    { name: 'Azul petróleo', hex: '#1e646e', rgb: [30, 100, 110] },
+    { name: 'Roxo ameixa', hex: '#5a3778', rgb: [90, 55, 120] },
+    { name: 'Terracota', hex: '#af502d', rgb: [175, 80, 45] },
+    { name: 'Azul marinho', hex: '#193764', rgb: [25, 55, 100] },
+    { name: 'Verde oliva', hex: '#5a6428', rgb: [90, 100, 40] },
+];
+
+let currentAccentRgb = [42, 95, 75]; // padrão verde floresta
 const DEFAULT_PROMPT = `Você é um especialista em recrutamento técnico e redação de currículos para a área de tecnologia.\n\nAbaixo está o currículo mestre do candidato, que contém TODA a sua experiência:\n\n<curriculo_mestre>\n{CV}\n</curriculo_mestre>\n\nAbaixo está a descrição da vaga para a qual ele está se candidatando:\n\n<vaga>\n{VAGA}\n</vaga>\n\nSua tarefa é gerar um currículo otimizado para essa vaga específica, seguindo estas diretrizes:\n\n1. **Seleção de conteúdo**: Inclua apenas as experiências, projetos e habilidades mais relevantes para essa vaga.\n2. **Palavras-chave ATS**: Use as mesmas palavras-chave e terminologia presentes na descrição da vaga.\n3. **Linguagem**: Escreva em {IDIOMA}. Mantenha o idioma consistente em todo o documento.\n4. **Métricas e impacto**: Preserve e destaque todas as métricas quantitativas do currículo original.\n5. **Tom**: Adapte o tom ao perfil da empresa.\n6. **Formato**: Retorne em Markdown bem estruturado. Não inclua explicações — apenas o currículo pronto.\n\nGere o currículo agora:`;
 
 // ── API HELPERS ──
@@ -81,6 +94,12 @@ async function initApp() {
         document.getElementById('user-initial').textContent = (currentUser.display_name || currentUser.username)[0].toUpperCase();
         document.getElementById('user-name-label').textContent = currentUser.display_name || currentUser.username;
         if (currentUser.is_admin) document.getElementById('admin-btn').style.display = '';
+
+        if (profile.accent_color) {
+            const found = COLOR_PALETTE.find(c => c.hex === profile.accent_color);
+            if (found) currentAccentRgb = found.rgb;
+        }
+        updateAccentPreview(profile.accent_color || '#2a5f4b');
 
         const profile = await api('GET', '/api/profile/');
         document.getElementById('cv-text').value = lang === 'pt' ? (profile.cv_pt || '') : (profile.cv_en || '');
@@ -365,96 +384,149 @@ async function exportPDF() {
         const margin = 18;
         const contentWidth = pageWidth - margin * 2;
         let y = margin;
-        const lineHeight = 5;
         const pageHeight = 297;
         const bottomMargin = 18;
+        const accent = currentAccentRgb;
 
         function checkPage(neededSpace = 8) {
             if (y + neededSpace > pageHeight - bottomMargin) {
                 doc.addPage();
                 y = margin;
+                return true;
             }
+            return false;
         }
 
-        function writeLine(text, fontSize, fontStyle, color) {
-            doc.setFontSize(fontSize);
-            doc.setFont('helvetica', fontStyle);
-            doc.setTextColor(...color);
-            const lines = doc.splitTextToSize(text, contentWidth);
-            lines.forEach(line => {
-                checkPage();
-                doc.text(line, margin, y, { align: 'justify', maxWidth: contentWidth });
-                y += lineHeight * (fontSize / 10);
-            });
-        }
-
-        function drawHRule(color = [42, 95, 75]) {
-            checkPage(3);
+        function drawHRule(color) {
             doc.setDrawColor(...color);
-            doc.setLineWidth(0.4);
+            doc.setLineWidth(0.3);
             doc.line(margin, y, pageWidth - margin, y);
             y += 3;
         }
 
-        // Parsear o Markdown linha a linha
-        const lines = lastOutput.split('\n');
+        function blockHeight(text, fontSize, width) {
+            doc.setFontSize(fontSize);
+            const lines = doc.splitTextToSize(text, width);
+            return lines.length * (fontSize / 10) * 5;
+        }
 
-        for (let i = 0; i < lines.length; i++) {
-            const line = lines[i].trim();
+        // Pré-processar linhas em blocos
+        const rawLines = lastOutput.split('\n');
+        const blocks = [];
+        let i = 0;
 
-            if (!line) {
-                y += 2;
-                continue;
+        while (i < rawLines.length) {
+            const line = rawLines[i].trim();
+            if (!line) { blocks.push({ type: 'space' }); i++; continue; }
+
+            if (line === '---') { blocks.push({ type: 'hr' }); i++; continue; }
+
+            if (line.startsWith('# ')) {
+                // Agrupa título + conteúdo seguinte para evitar quebra logo após o título
+                blocks.push({ type: 'h1', text: line.replace('# ', '') });
+                i++; continue;
             }
 
-            if (line === '---') {
-                checkPage(4);
-                y += 2;
-                doc.setDrawColor(180, 180, 175);
-                doc.setLineWidth(0.3);
-                doc.line(margin, y, pageWidth - margin, y);
-                y += 4;
-                continue;
+            if (line.startsWith('## ')) {
+                // Coleta o bloco inteiro da seção para estimar tamanho
+                const sectionLines = [];
+                let j = i + 1;
+                while (j < rawLines.length && !rawLines[j].trim().startsWith('## ') && !rawLines[j].trim().startsWith('# ')) {
+                    sectionLines.push(rawLines[j]);
+                    j++;
+                }
+                blocks.push({ type: 'h2', text: line.replace('## ', ''), sectionLines });
+                i++; continue;
             }
+
             if (line.startsWith('### ')) {
-                checkPage(8);
-                y += 1;
-                writeLine(line.replace('### ', ''), 10, 'bold', [26, 24, 20]);
-            } else if (line.startsWith('## ')) {
-                checkPage(10);
+                blocks.push({ type: 'h3', text: line.replace('### ', '') });
+                i++; continue;
+            }
+
+            if (line.startsWith('- ') || line.startsWith('* ')) {
+                blocks.push({ type: 'li', text: line.replace(/^[-*] /, '').replace(/\*\*(.*?)\*\*/g, '$1') });
+                i++; continue;
+            }
+
+            blocks.push({ type: 'p', text: line.replace(/\*\*(.*?)\*\*/g, '$1') });
+            i++;
+        }
+
+        // Renderizar blocos
+        for (const block of blocks) {
+            if (block.type === 'space') { y += 2; continue; }
+
+            if (block.type === 'hr') {
+                y += 2;
+                drawHRule([180, 180, 175]);
+                y += 2;
+                continue;
+            }
+
+            if (block.type === 'h1') {
+                checkPage(14);
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(26, 24, 20);
+                const lines = doc.splitTextToSize(block.text, contentWidth);
+                lines.forEach(l => { doc.text(l, margin, y); y += 8; });
+                drawHRule(accent);
+                continue;
+            }
+
+            if (block.type === 'h2') {
+                // Estima altura mínima da seção (título + pelo menos 2 linhas de conteúdo)
+                const minHeight = 18;
+                checkPage(minHeight);
                 y += 3;
-                writeLine(line.replace('## ', ''), 11, 'bold', [42, 95, 75]);
-                drawHRule([228, 224, 217]);
-            } else if (line.startsWith('# ')) {
-                checkPage(12);
-                writeLine(line.replace('# ', ''), 16, 'bold', [26, 24, 20]);
-                drawHRule([42, 95, 75]);
-            } else if (line.startsWith('- ') || line.startsWith('* ')) {
-                const text = line.replace(/^[-*] /, '').replace(/\*\*(.*?)\*\*/g, '$1');
-                checkPage(6);
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(...accent);
+                const lines = doc.splitTextToSize(block.text, contentWidth);
+                lines.forEach(l => { doc.text(l, margin, y); y += 6; });
+                drawHRule([210, 206, 200]);
+                continue;
+            }
+
+            if (block.type === 'h3') {
+                checkPage(10);
+                y += 1;
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(26, 24, 20);
+                const lines = doc.splitTextToSize(block.text, contentWidth);
+                lines.forEach(l => { doc.text(l, margin, y); y += 5; });
+                continue;
+            }
+
+            if (block.type === 'li') {
                 doc.setFontSize(9);
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(26, 24, 20);
-                const wrapped = doc.splitTextToSize(text, contentWidth - 5);
+                const wrapped = doc.splitTextToSize(block.text, contentWidth - 5);
+                const needed = wrapped.length * 4.5 + 2;
+                checkPage(needed);
                 wrapped.forEach((wl, idx) => {
-                    checkPage();
                     if (idx === 0) doc.text('•', margin, y);
                     doc.text(wl, margin + 4, y);
                     y += 4.5;
                 });
-            } else {
-                // Parágrafo normal — remove bold markers
-                const text = line.replace(/\*\*(.*?)\*\*/g, '$1');
-                checkPage(6);
+                continue;
+            }
+
+            if (block.type === 'p') {
                 doc.setFontSize(9);
                 doc.setFont('helvetica', 'normal');
                 doc.setTextColor(26, 24, 20);
-                const wrapped = doc.splitTextToSize(text, contentWidth);
+                const wrapped = doc.splitTextToSize(block.text, contentWidth);
+                const needed = wrapped.length * 4.5 + 2;
+                checkPage(needed);
                 wrapped.forEach(wl => {
-                    checkPage();
                     doc.text(wl, margin, y, { align: 'justify', maxWidth: contentWidth });
                     y += 4.5;
                 });
+                continue;
             }
         }
 
@@ -474,6 +546,20 @@ function openProfile() {
     document.getElementById('profile-name-msg').style.display = 'none';
     document.getElementById('profile-pass-msg').style.display = 'none';
     document.getElementById('profile-panel').classList.add('open');
+
+    // Gerar paleta de cores
+    const paletteContainer = document.getElementById('color-palette');
+    if (paletteContainer && !paletteContainer.hasChildNodes()) {
+        COLOR_PALETTE.forEach(c => {
+            const swatch = document.createElement('div');
+            swatch.title = c.name;
+            swatch.style.cssText = `width:28px;height:28px;border-radius:5px;background:${c.hex};cursor:pointer;border:1px solid rgba(0,0,0,0.1);transition:transform 0.15s,box-shadow 0.15s`;
+            swatch.onmouseover = () => swatch.style.transform = 'scale(1.15)';
+            swatch.onmouseout = () => swatch.style.transform = 'scale(1)';
+            swatch.onclick = () => setAccentColor(c.hex, c.rgb);
+            paletteContainer.appendChild(swatch);
+        });
+    }
 }
 
 function closeProfile() {
@@ -619,4 +705,15 @@ function restorePrompt() {
     closeDetail();
     switchTab('prompt');
     savePrompt();
+}
+
+function updateAccentPreview(hex) {
+    const preview = document.getElementById('accent-preview');
+    if (preview) preview.style.background = hex;
+}
+
+async function setAccentColor(hex, rgb) {
+    currentAccentRgb = rgb;
+    updateAccentPreview(hex);
+    await api('PUT', '/api/profile/', { accent_color: hex });
 }
