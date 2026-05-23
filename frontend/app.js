@@ -352,61 +352,109 @@ async function deleteUser(id) {
 }
 
 async function exportPDF() {
-  if (!lastOutput) return;
-  const btn = document.getElementById('pdf-btn');
-  btn.textContent = 'Gerando...';
-  btn.disabled = true;
-
-  const container = document.createElement('div');
-  container.style.cssText = `
-    width: 794px;
-    padding: 60px 72px;
-    box-sizing: border-box;
-    font-family: Georgia, serif;
-    font-size: 11px;
-    line-height: 1.6;
-    color: #1a1814;
-    background: white;
-  `;
-  container.innerHTML = marked.parse(lastOutput);
-
-  container.querySelectorAll('h1').forEach(el => {
-    el.style.cssText = 'font-size:18px;margin-bottom:4px;border-bottom:2px solid #c84b2f;padding-bottom:6px;';
-  });
-  container.querySelectorAll('h2').forEach(el => {
-    el.style.cssText = 'font-size:13px;color:#c84b2f;margin-top:14px;margin-bottom:3px;border-bottom:1px solid #e4e0d9;padding-bottom:3px;';
-  });
-  container.querySelectorAll('h3').forEach(el => {
-    el.style.cssText = 'font-size:11px;font-weight:600;margin-top:8px;margin-bottom:2px;';
-  });
-  container.querySelectorAll('p, li').forEach(el => {
-    el.style.cssText = 'text-align:justify;margin:3px 0;';
-  });
-  container.querySelectorAll('ul').forEach(el => {
-    el.style.cssText = 'padding-left:16px;margin:3px 0;';
-  });
-
-  const opt = {
-    margin: 0,
-    filename: 'curriculo.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      width: 794,
-      windowWidth: 794,
-      logging: false
-    },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
-
-  try {
-    await html2pdf().set(opt).from(container).save();
-  } finally {
-    btn.textContent = 'Exportar PDF';
-    btn.disabled = false;
+    if (!lastOutput) return;
+    const btn = document.getElementById('pdf-btn');
+    btn.textContent = 'Gerando...';
+    btn.disabled = true;
+  
+    try {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  
+      const pageWidth = 210;
+      const margin = 18;
+      const contentWidth = pageWidth - margin * 2;
+      let y = margin;
+      const lineHeight = 5;
+      const pageHeight = 297;
+      const bottomMargin = 18;
+  
+      function checkPage(neededSpace = 8) {
+        if (y + neededSpace > pageHeight - bottomMargin) {
+          doc.addPage();
+          y = margin;
+        }
+      }
+  
+      function writeLine(text, fontSize, fontStyle, color) {
+        doc.setFontSize(fontSize);
+        doc.setFont('helvetica', fontStyle);
+        doc.setTextColor(...color);
+        const lines = doc.splitTextToSize(text, contentWidth);
+        lines.forEach(line => {
+          checkPage();
+          doc.text(line, margin, y, { align: 'justify', maxWidth: contentWidth });
+          y += lineHeight * (fontSize / 10);
+        });
+      }
+  
+      function drawHRule(color = [200, 75, 47]) {
+        checkPage(3);
+        doc.setDrawColor(...color);
+        doc.setLineWidth(0.4);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 3;
+      }
+  
+      // Parsear o Markdown linha a linha
+      const lines = lastOutput.split('\n');
+  
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+  
+        if (!line) {
+          y += 2;
+          continue;
+        }
+  
+        if (line.startsWith('### ')) {
+          checkPage(8);
+          y += 1;
+          writeLine(line.replace('### ', ''), 10, 'bold', [26, 24, 20]);
+        } else if (line.startsWith('## ')) {
+          checkPage(10);
+          y += 3;
+          writeLine(line.replace('## ', ''), 11, 'bold', [200, 75, 47]);
+          drawHRule([228, 224, 217]);
+        } else if (line.startsWith('# ')) {
+          checkPage(12);
+          writeLine(line.replace('# ', ''), 16, 'bold', [26, 24, 20]);
+          drawHRule([200, 75, 47]);
+        } else if (line.startsWith('- ') || line.startsWith('* ')) {
+          const text = line.replace(/^[-*] /, '').replace(/\*\*(.*?)\*\*/g, '$1');
+          checkPage(6);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(26, 24, 20);
+          const wrapped = doc.splitTextToSize(text, contentWidth - 5);
+          wrapped.forEach((wl, idx) => {
+            checkPage();
+            if (idx === 0) doc.text('•', margin, y);
+            doc.text(wl, margin + 4, y);
+            y += 4.5;
+          });
+        } else {
+          // Parágrafo normal — remove bold markers
+          const text = line.replace(/\*\*(.*?)\*\*/g, '$1');
+          checkPage(6);
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(26, 24, 20);
+          const wrapped = doc.splitTextToSize(text, contentWidth);
+          wrapped.forEach(wl => {
+            checkPage();
+            doc.text(wl, margin, y, { align: 'justify', maxWidth: contentWidth });
+            y += 4.5;
+          });
+        }
+      }
+  
+      doc.save('curriculo.pdf');
+    } finally {
+      btn.textContent = 'Exportar PDF';
+      btn.disabled = false;
+    }
   }
-}
 
 function openProfile() {
     document.getElementById('profile-username').value = currentUser.username;
