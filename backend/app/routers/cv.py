@@ -261,9 +261,9 @@ async def export_pdf_content(
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={{
+        headers={
             "Content-Disposition": "attachment; filename=curriculo.pdf"
-        }}
+        }
     )
 
 @router.get("/history", response_model=list[GeneratedCVListItem])
