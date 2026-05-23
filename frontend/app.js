@@ -90,28 +90,39 @@ function doLogout() {
 // ── INIT ──
 async function initApp() {
     try {
-        currentUser = await api('GET', '/api/auth/me');
-        document.getElementById('user-initial').textContent = (currentUser.display_name || currentUser.username)[0].toUpperCase();
-        document.getElementById('user-name-label').textContent = currentUser.display_name || currentUser.username;
-        if (currentUser.is_admin) document.getElementById('admin-btn').style.display = '';
-
-        if (profile.accent_color) {
-            const found = COLOR_PALETTE.find(c => c.hex === profile.accent_color);
-            if (found) currentAccentRgb = found.rgb;
-        }
-        updateAccentPreview(profile.accent_color || '#2a5f4b');
-
-        const profile = await api('GET', '/api/profile/');
-        document.getElementById('cv-text').value = lang === 'pt' ? (profile.cv_pt || '') : (profile.cv_en || '');
-        document.getElementById('prompt-text').value = profile.base_prompt || DEFAULT_PROMPT;
-        updateCounts();
-
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-screen').style.display = 'flex';
-        checkReady();
-        loadHistory();
-    } catch { doLogout(); }
-}
+      console.log('initApp: buscando usuário...');
+      currentUser = await api('GET', '/api/auth/me');
+      console.log('initApp: usuário ok', currentUser);
+  
+      document.getElementById('user-initial').textContent = (currentUser.display_name || currentUser.username)[0].toUpperCase();
+      document.getElementById('user-name-label').textContent = currentUser.display_name || currentUser.username;
+      if (currentUser.is_admin) document.getElementById('admin-btn').style.display = '';
+  
+      console.log('initApp: buscando perfil...');
+      const profile = await api('GET', '/api/profile/');
+      console.log('initApp: perfil ok', profile);
+  
+      document.getElementById('cv-text').value = lang === 'pt' ? (profile.cv_pt || '') : (profile.cv_en || '');
+      document.getElementById('prompt-text').value = profile.base_prompt || DEFAULT_PROMPT;
+      updateCounts();
+  
+      console.log('initApp: cor do perfil:', profile.accent_color);
+      if (profile.accent_color) {
+        const found = COLOR_PALETTE.find(c => c.hex === profile.accent_color);
+        if (found) currentAccentRgb = found.rgb;
+      }
+      updateAccentPreview(profile.accent_color || '#2a5f4b');
+  
+      console.log('initApp: trocando telas...');
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app-screen').style.display = 'flex';
+      checkReady();
+      loadHistory();
+    } catch(e) {
+      console.error('initApp erro:', e);
+      doLogout();
+    }
+  }
 
 // Auto-login if tokens exist
 if (accessToken) initApp();
